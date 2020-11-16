@@ -82,7 +82,14 @@ bot.onText(/\/start/, (msg) => {
 bot.onText(/\/users/, (msg) => {
     if(isAdmin(msg)) {
 
-        var size = db.count(`/known_users`);
+        let size = 0;
+
+        try {
+            size = db.count(`/known_users`);
+        } catch(err) {
+            size = 0;
+        }
+
         if(size > 0) {
             for(var i = 0; i < size; i++) {
                 sendUserSummary(msg.chat.id, db.getData(`/known_users[${i}]`));
@@ -100,7 +107,13 @@ bot.onText(/\/users/, (msg) => {
 bot.onText(/\/banned/, (msg) => {
     if(isAdmin(msg)) {
 
-        var size = db.count(`/banned_users`);
+        let size = 0;
+
+        try {
+            size = db.count(`/banned_users`);
+        } catch(err) {
+            size = 0;
+        }
 
         if(size > 0) {
             for(var i = 0; i < size; i++) {
