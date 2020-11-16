@@ -21,17 +21,17 @@ class Gpio {
         exec(`echo ${pin} | sudo tee /sys/class/gpio/export`);
 
         //set pin direction
-        exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} | sudo tee /sys/class/gpio${pin}/direction`);
+        exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} | sudo tee /sys/class/gpio/gpio${pin}/direction`);
 
         if(direction == DIRECTION.OUTPUT) {
-            exec(`echo 1 | sudo tee /sys/class/gpio${pin}/value`);
+            exec(`echo 1 | sudo tee /sys/class/gpio/gpio${pin}/value`);
         }
         
     }
 
     write(value) {
         if(this.direction == DIRECTION.OUTPUT) {
-            exec(`echo ${value == VALUE.HIGH? "1" : "0"} | sudo tee /sys/class/gpio${this.pin}/value`)
+            exec(`echo ${value == VALUE.HIGH? "1" : "0"} | sudo tee /sys/class/gpio/gpio${this.pin}/value`)
         } else {
             throw "Can't wirte on a GPIO PIN that is not set to OUTPUT";
         }
@@ -39,7 +39,7 @@ class Gpio {
 
     read() {
         return new Promise((resolve, reject) => {
-            exec(`cat /sys/class/gpio${this.pin}/value`, (err, stdout, stderr) => {
+            exec(`cat /sys/class/gpio/gpio${this.pin}/value`, (err, stdout, stderr) => {
                 if(err) {
                     reject(stderr);
                 } else {
