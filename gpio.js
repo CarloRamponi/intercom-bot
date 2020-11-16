@@ -18,20 +18,20 @@ class Gpio {
         this.direction = direction;
 
         //create gpio
-        exec(`echo ${pin} > /sys/class/gpio/export`);
+        exec(`echo ${pin} | sudo tee /sys/class/gpio/export`);
 
         //set pin direction
-        exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} > /sys/class/gpio${pin}/direction`);
+        exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} | sudo tee /sys/class/gpio${pin}/direction`);
 
         if(direction == DIRECTION.OUTPUT) {
-            exec(`echo 1 > /sys/class/gpio${pin}/value`);
+            exec(`echo 1 | sudo tee /sys/class/gpio${pin}/value`);
         }
         
     }
 
     write(value) {
         if(this.direction == DIRECTION.OUTPUT) {
-            exec(`echo ${value == VALUE.HIGH? "1" : "0"} > /sys/class/gpio${this.pin}/value`)
+            exec(`echo ${value == VALUE.HIGH? "1" : "0"} | sudo tee /sys/class/gpio${this.pin}/value`)
         } else {
             throw "Can't wirte on a GPIO PIN that is not set to OUTPUT";
         }
