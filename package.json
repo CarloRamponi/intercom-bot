@@ -1,0 +1,24 @@
+{
+  "name": "intercom-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot that manages a traditional, old school, intercom",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CarloRamponi/intercom-bot.git"
+  },
+  "author": "Carlo Ramponi",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/CarloRamponi/intercom-bot/issues"
+  },
+  "homepage": "https://github.com/CarloRamponi/intercom-bot#readme",
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "node-json-db": "^1.1.0",
+    "node-telegram-bot-api": "^0.50.0"
+  }
+}
