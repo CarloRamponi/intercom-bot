@@ -17,11 +17,11 @@ Telegram bot that manages a traditional, old school, intercom
 - Clone this repo in the ssh bot's home folder (`/home/intercombot`)
 - Create the config file `/home/intercombot/intercom-bot/secrets.json`
   ```
-{
+  {
     "token" : "YOUR_TOKEN_HERE",
     "admin" : "YOUR_TELEGRAM_USERNAME_HERE",
     "door_pin" : PIN_NUMBER_HERE
-}
+  }
   ```
   Where:
   - `token` is the bot token provided by the botfather,
