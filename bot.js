@@ -184,7 +184,7 @@ bot.onText(/\/test/, async (msg) => {
     }
 });
 
-bot.on('callback_query', (query) => {
+bot.on('callback_query', async (query) => {
 
     let match;
   
