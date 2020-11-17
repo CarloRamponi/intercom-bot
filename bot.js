@@ -14,11 +14,8 @@ const db = new JsonDB(new Config("database", true, false, '/'));
 const bot = new TelegramBot(secrets.token, {polling: true});
 
 const door_gpio = new Gpio.Gpio(secrets.door_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
-door_gpio.write(Gpio.VALUE.HIGH);
 const speaker_gpio = new Gpio.Gpio(secrets.speaker_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
-speaker_gpio.write(Gpio.VALUE.HIGH);
 const mic_gpio = new Gpio.Gpio(secrets.mic_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
-mic_gpio.write(Gpio.VALUE.HIGH);
 
 const audio = new AudioController(secrets.speaker_device, secrets.speaker_volume, secrets.mic_device, secrets.mic_volume);
 

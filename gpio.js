@@ -21,7 +21,11 @@ class Gpio {
         exec(`echo ${pin} | sudo tee /sys/class/gpio/export`, (err, stdout, sterr) => {
 
             //set pin direction
-            exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} | sudo tee /sys/class/gpio/gpio${pin}/direction`);
+            exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} | sudo tee /sys/class/gpio/gpio${pin}/direction`, (err, stdout, stderr) => {
+                if(def !== null) {
+                    this.write(def);
+                }
+            });
 
         });
         
