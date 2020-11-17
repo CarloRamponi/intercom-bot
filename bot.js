@@ -159,7 +159,7 @@ bot.onText(/\/open/, async (msg) => {
 bot.onText(/\/test/, async (msg) => {
     if(isAdmin(msg)) {
 
-        bot.sendMessage(getAdminChatid(), "🔔🔔🔔🔔🔔", {
+        bot.sendMessage(getAdminChatid(), "🔔🔔🔔🔔🔔🔔🔔🔔", {
             parse_mode: "Markdown",
             reply_markup: {
                 inline_keyboard: [
@@ -291,7 +291,7 @@ bot.on('callback_query', async (query) => {
   
     }
 
-    match = query.data.match(/\/not_at_home (.+)/);
+    match = query.data.match(/\/not_at_home/);
     if(match) {
 
         if(isAdmin(query.message)) {
@@ -324,7 +324,7 @@ bot.on('callback_query', async (query) => {
   
     }
 
-    match = query.data.match(/\/call_me (.+)/);
+    match = query.data.match(/\/call_me/);
     if(match) {
 
         if(isAdmin(query.message)) {
@@ -344,7 +344,7 @@ bot.on('callback_query', async (query) => {
   
     }
 
-    match = query.data.match(/\/package_inside (.+)/);
+    match = query.data.match(/\/package_inside/);
     if(match) {
 
         if(isAdmin(query.message)) {
