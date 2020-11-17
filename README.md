@@ -1,6 +1,12 @@
 # intercom-bot
 Telegram bot that manages a traditional, old school, intercom
 
+## Dependencies
+- node
+- npm
+- mpv
+- vorbis-tools (ogg encoding)
+
 ## Configuration
 
 - Create a telegram bot and get the token
@@ -14,6 +20,10 @@ Telegram bot that manages a traditional, old school, intercom
   ```
   useradd --create-home intercombot
   ```
+- Add user to group audio
+  ```
+  gpasswd -a intercombot audio
+  ```
 - Clone this repo in the ssh bot's home folder (`/home/intercombot`)
 - Create the config file `/home/intercombot/intercom-bot/secrets.json`
   ```
@@ -23,10 +33,6 @@ Telegram bot that manages a traditional, old school, intercom
     "door_pin" : PIN_NUMBER_HERE,
     "speaker_pin": PIN_NUMBER_HERE,
     "mic_pin": PIN_NUMBER_HERE,
-    "speaker_device": SPEAKER_DEVICE_HERE,
-    "speaker_volume": SPEAKER_VOLUME_HERE,
-    "mic_device": MICROHPONE_DEVICE_HERE,
-    "mic_volume": MICROPHONE_VOLUME_HERE
   }
   ```
   Where:
@@ -40,9 +46,44 @@ Telegram bot that manages a traditional, old school, intercom
   - `mic_device` is the name of the microphone you will use, run `pacmd list-sources | grep name:` to print the list
   - `mic_volume` is the default volume of the microphone (0x0-0x10000)
 - Run `npm install` in the project folder
+- Set up your device audio in a way that the default audio card is the one that you want the bot to use, in my case:
+  - List the available devices:
+  ```
+  carlo@orangepipc:~$ aplay -l
+  **** List of PLAYBACK Hardware Devices ****
+  card 0: Codec [H3 Audio Codec], device 0: CDC PCM Codec-0 [CDC PCM Codec-0]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0
+  card 1: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0
+  card 2: sun8ih3hdmi [sun8i-h3-hdmi], device 0: 1c22800.i2s-i2s-hifi i2s-hifi-0 [1c22800.i2s-i2s-hifi i2s-hifi-0]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0
+  ```
+  The right one is
+  ```
+  card 1: Device [USB PnP Sound Device], device 0: USB Audio [USB Audio]
+    Subdevices: 1/1
+    Subdevice #0: subdevice #0
+  ```
+  So i will create/edit the file `/etc/asound.conf` like this:
+  ```
+  pcm.!default {
+      type hw
+      card 1
+      device 0
+  }
+
+  ctl.!default {
+      type hw
+      card 1
+  }
+  ```
+  After a reboot, it should be the default audio device, remember to adjust your volumes with `alsamixer`
 - Allow him to run the tee command as root without a password, run `visudo` and add this line at the end of that file, where N1, N2, ... are the gpio pin numbers that you will be using (the ones that are specified in `the secrets.json` file)
   ```
-  intercombot ALL= NOPASSWD: /usr/bin/tee /sys/class/gpio/export, /usr/bin/tee /sys/class/gpio/gpioN1/value, /usr/bin/tee /sys/class/gpio/gpioN1/direction, /usr/bin/tee /sys/class/gpio/gpioN2/value, /usr/bin/tee /sys/class/gpio/gpioN3/direction, ...
+  intercombot ALL= NOPASSWD: /usr/bin/tee /sys/class/gpio/export, /usr/bin/tee /sys/class/gpio/gpioN1/value, /usr/bin/tee /sys/class/gpio/gpioN1/direction, /usr/bin/tee /sys/class/gpio/gpioN2/value, /usr/bin/tee /sys/class/gpio/gpioN2/direction, ...
   ```
   This allows him to kick ssh connections if needed, reboot the system and start/stop sshd service
 - Create the service file `/lib/systemd/system/intercom-bot.service`

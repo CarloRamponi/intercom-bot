@@ -17,7 +17,7 @@ const door_gpio = new Gpio.Gpio(secrets.door_pin, Gpio.DIRECTION.OUTPUT, Gpio.VA
 const speaker_gpio = new Gpio.Gpio(secrets.speaker_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
 const mic_gpio = new Gpio.Gpio(secrets.mic_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
 
-const audio = new AudioController(secrets.speaker_device, secrets.speaker_volume, secrets.mic_device, secrets.mic_volume);
+const audio = new AudioController();
 
 bot.on("polling_error", (err) => console.log(err));
 
