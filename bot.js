@@ -316,7 +316,7 @@ bot.on('callback_query', async (query) => {
                 message_id: tmp.message_id
             });
 
-            bot.sendMessage(query.message.chat.id, "Recording response...");
+            const message = await bot.sendMessage(query.message.chat.id, "Recording response...");
 
             mic_gpio.write(Gpio.VALUE.LOW);
             
@@ -327,6 +327,7 @@ bot.on('callback_query', async (query) => {
             
             mic_gpio.write(Gpio.VALUE.HIGH);
 
+            bot.deleteMessage(message.chat.id, message.message_id);
             bot.sendAudio(query.message.chat.id, filename);
 
             speaker_gpio.write(Gpio.VALUE.LOW);
