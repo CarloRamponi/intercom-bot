@@ -12,7 +12,11 @@ const db = new JsonDB(new Config("database", true, false, '/'));
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(secrets.token, {polling: true});
 
-const door_gpio = new Gpio.Gpio(secrets.door_pin, Gpio.DIRECTION.OUTPUT);
+const door_gpio = new Gpio.Gpio(secrets.door_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
+door_gpio.write(Gpio.HIGH);
+setInterval(() => {
+    door_gpio.write(Gpio.HIGH);
+}, 1000);
 
 bot.on("polling_error", (err) => console.log(err));
 
@@ -22,7 +26,6 @@ bot.onText(/\/start/, (msg) => {
         bot.sendMessage(msg.chat.id, "Please, set an username in order to use this bot\nAfter that type /start again");
     } else {
         if(isAdmin(msg)) {
-            db.push("/adminChatId", msg.chat.id);
             bot.sendMessage(msg.chat.id, "Hi Boss, how may I help you?");
         } else {
             try {
@@ -143,7 +146,7 @@ bot.onText(/\/banned/, (msg) => {
 bot.onText(/\/open/, async (msg) => {
     if(isAdmin(msg) || hasPremission(msg, "open")) {
         door_gpio.write(Gpio.VALUE.LOW);
-        await sleep(2000);
+        await sleep(500);
         door_gpio.write(Gpio.VALUE.HIGH);
         bot.sendMessage(msg.chat.id, "Done.");
     } else {
@@ -336,7 +339,11 @@ function hasPremission(msg, permission) {
 }
 
 function isAdmin(msg) {
-    return msg.chat.username === secrets.admin;
+    if(msg.chat.username === secrets.admin) {
+        db.push("/adminChatId", msg.chat.id);
+        return true;
+    }
+    return false;
 }
 
 function notifyOnline() {

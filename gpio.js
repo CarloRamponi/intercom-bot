@@ -12,7 +12,7 @@ const VALUE = {
 
 class Gpio {
 
-    constructor(pin, direction) {
+    constructor(pin, direction, def) {
         
         this.pin = pin;
         this.direction = direction;
@@ -22,10 +22,6 @@ class Gpio {
 
         //set pin direction
         exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} | sudo tee /sys/class/gpio/gpio${pin}/direction`);
-
-        if(direction == DIRECTION.OUTPUT) {
-            exec(`echo 1 | sudo tee /sys/class/gpio/gpio${pin}/value`);
-        }
         
     }
 
