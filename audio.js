@@ -10,29 +10,32 @@ class AudioController {
         this.microphone_name = microphone_name;
         this.microphone_volume = microphone_volume;
 
-        exec(`pacmd set-default-sink ${speaker_name}`, (err, stdout, stderr) => {
-            if(err) {
-                throw `Exec error: ${stderr}`;
-            }
-
-            exec(`pacmd set-sink-volume ${speaker_name}, ${speaker_volume}`, (err, stdout, stderr) => {
+        exec(`pulseaudio -D`, (err, stdout, stderr) => {
+            exec(`pacmd set-default-sink ${speaker_name}`, (err, stdout, stderr) => {
                 if(err) {
                     throw `Exec error: ${stderr}`;
                 }
+    
+                exec(`pacmd set-sink-volume ${speaker_name}, ${speaker_volume}`, (err, stdout, stderr) => {
+                    if(err) {
+                        throw `Exec error: ${stderr}`;
+                    }
+                });
             });
-        });
-
-        exec(`pacmd set-default-source ${microphone_name}`, (err, stdout, stderr) => {
-            if(err) {
-                throw `Exec error: ${stderr}`;
-            }
-
-            exec(`pacmd set-source-volume ${microphone_name}, ${microphone_volume}`, (err, stdout, stderr) => {
+    
+            exec(`pacmd set-default-source ${microphone_name}`, (err, stdout, stderr) => {
                 if(err) {
                     throw `Exec error: ${stderr}`;
                 }
+    
+                exec(`pacmd set-source-volume ${microphone_name}, ${microphone_volume}`, (err, stdout, stderr) => {
+                    if(err) {
+                        throw `Exec error: ${stderr}`;
+                    }
+                });
             });
-        });
+        })
+
     }
 
     play(filename) {

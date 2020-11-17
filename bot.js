@@ -166,14 +166,14 @@ bot.onText(/\/open/, async (msg) => {
     }
 });
 
-bot.onText(/\/open/, async (msg) => {
+bot.onText(/\/play/, async (msg) => {
     if(isAdmin(msg)) {
 
         const tmp = await bot.sendMessage(msg.chat.id, "Playing...");
         
         speaker_gpio.write(Gpio.VALUE.LOW);
 
-        await audio.play("/home/carlo/minecraft.mp3");
+        await audio.play("/home/carlo/minecraft.webm");
         
         speaker_gpio.write(Gpio.VALUE.HIGH);
 
