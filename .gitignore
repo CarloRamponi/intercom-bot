@@ -106,3 +106,5 @@ dist
 secrets.json
 database.json
 package-lock.json
+
+audio/*

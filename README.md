@@ -81,6 +81,10 @@ Telegram bot that manages a traditional, old school, intercom
   }
   ```
   After a reboot, it should be the default audio device, remember to adjust your volumes with `alsamixer`
+- Create your audio files using this cool site: [ttsmp3](https://ttsmp3.com/) and put them in the audio folder, these are the files:
+  - `not_at_home.ogg` this should say something link "I'm not at home right now, please send me a message after the beep", after that the bot will start recording for 10 seconds and the send you the audio file
+  - `call_me.ogg` this should say your telephone number
+  - `leave_the_package_inside.ogg` this should instruct a delivery man to hide a package of yours, after that the door will open
 - Allow him to run the tee command as root without a password, run `visudo` and add this line at the end of that file, where N1, N2, ... are the gpio pin numbers that you will be using (the ones that are specified in `the secrets.json` file)
   ```
   intercombot ALL= NOPASSWD: /usr/bin/tee /sys/class/gpio/export, /usr/bin/tee /sys/class/gpio/gpioN1/value, /usr/bin/tee /sys/class/gpio/gpioN1/direction, /usr/bin/tee /sys/class/gpio/gpioN2/value, /usr/bin/tee /sys/class/gpio/gpioN2/direction, ...

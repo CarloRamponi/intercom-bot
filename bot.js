@@ -147,15 +147,7 @@ bot.onText(/\/banned/, (msg) => {
 bot.onText(/\/open/, async (msg) => {
     if(isAdmin(msg) || hasPremission(msg, "open")) {
         
-        door_gpio.write(Gpio.VALUE.LOW);
-        // /*DEBUG*/ speaker_gpio.write(Gpio.VALUE.LOW);
-        // /*DEBUG*/ mic_gpio.write(Gpio.VALUE.LOW);
-
-        await sleep(300);
-        
-        door_gpio.write(Gpio.VALUE.HIGH);
-        // /*DEBUG*/ speaker_gpio.write(Gpio.VALUE.HIGH);
-        // /*DEBUG*/ mic_gpio.write(Gpio.VALUE.HIGH);
+        openTheDoor();
 
         bot.sendMessage(msg.chat.id, "Done.");
     } else {
@@ -163,21 +155,30 @@ bot.onText(/\/open/, async (msg) => {
     }
 });
 
-bot.onText(/\/play/, async (msg) => {
+/* Test command that replaces the intercom trigger until i figure out hoe to detect that */
+bot.onText(/\/test/, async (msg) => {
     if(isAdmin(msg)) {
 
-        const tmp = await bot.sendMessage(msg.chat.id, "Playing...");
-        
-        speaker_gpio.write(Gpio.VALUE.LOW);
-
-        await audio.play("/home/carlo/minecraft.webm");
-        
-        speaker_gpio.write(Gpio.VALUE.HIGH);
-
-        bot.editMessageText("Played.", {
-            chat_id: tmp.chat.id,
-            message_id: tmp.message_id
+        bot.sendMessage(getAdminChatid(), "🔔🔔🔔🔔🔔", {
+            parse_mode: "Markdown",
+            reply_markup: {
+                inline_keyboard: [
+                    [ {
+                        text: "I'm not at home, leave a message",
+                        callback_data: "/not_at_home"
+                    } ],
+                    [ {
+                        text: "Call me",
+                        callback_data: "/call_me"
+                    } ],
+                    [ {
+                        text: "Leave the package inside",
+                        callback_data: "/package_inside"
+                    } ]
+                ]
+            }
         });
+        
     } else {
         bot.sendMessage(msg.chat.id, "Unauthorized.");
     }
@@ -289,6 +290,81 @@ bot.on('callback_query', (query) => {
         }
   
     }
+
+    match = query.data.match(/\/not_at_home (.+)/);
+    if(match) {
+
+        if(isAdmin(query.message)) {
+
+            const tmp = await bot.sendMessage(query.message.chat.id, "Playing \"I'm not at home, leave a message\"...");
+        
+            speaker_gpio.write(Gpio.VALUE.LOW);
+            await audio.play("./audio/not_at_home.ogg");
+            speaker_gpio.write(Gpio.VALUE.HIGH);
+
+            bot.editMessageText("Played. \"I'm not at home, leave a message\"", {
+                chat_id: tmp.chat.id,
+                message_id: tmp.message_id
+            });
+
+            bot.sendMessage(query.message.chat.id, "Recording response...");
+
+            mic_gpio.write(Gpio.VALUE.LOW);
+            
+            const filename = "/tmp/record.ogg";
+            const duration = 10;
+
+            await audio.record(filename, duration);
+            
+            mic_gpio.write(Gpio.VALUE.HIGH);
+
+            bot.sendAudio(query.message.chat.id, filename);
+
+        }
+  
+    }
+
+    match = query.data.match(/\/call_me (.+)/);
+    if(match) {
+
+        if(isAdmin(query.message)) {
+
+            const tmp = await bot.sendMessage(query.message.chat.id, "Playing \"Call me\"...");
+        
+            speaker_gpio.write(Gpio.VALUE.LOW);
+            await audio.play("./audio/call_me.ogg");
+            speaker_gpio.write(Gpio.VALUE.HIGH);
+
+            bot.editMessageText("Played. \"Call me\"", {
+                chat_id: tmp.chat.id,
+                message_id: tmp.message_id
+            });
+
+        }
+  
+    }
+
+    match = query.data.match(/\/package_inside (.+)/);
+    if(match) {
+
+        if(isAdmin(query.message)) {
+
+            const tmp = await bot.sendMessage(query.message.chat.id, "Playing \"Leave the package inside\"...");
+        
+            speaker_gpio.write(Gpio.VALUE.LOW);
+            await audio.play("./audio/leave_the_package_inside.ogg");
+            speaker_gpio.write(Gpio.VALUE.HIGH);
+
+            bot.editMessageText("Played. \"Leave the package inside\"", {
+                chat_id: tmp.chat.id,
+                message_id: tmp.message_id
+            });
+
+            openTheDoor();
+
+        }
+  
+    }
   
   });
 
@@ -323,6 +399,14 @@ function userOptionsInlineKeyboard(user) {
             }
         ]
     ];
+}
+
+function openTheDoor() {
+
+    door_gpio.write(Gpio.VALUE.LOW);
+    await sleep(300);
+    door_gpio.write(Gpio.VALUE.HIGH);
+
 }
 
 function userSummary(user) {
