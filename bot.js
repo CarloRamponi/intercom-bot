@@ -108,6 +108,14 @@ bot.onText(/\/users/, (msg) => {
     }
 });
 
+bot.on('audio', (msg) => {
+    handleAudio(msg);
+});
+
+bot.on('voice', (msg) => {
+    handleAudio(msg);
+});
+
 bot.onText(/\/banned/, (msg) => {
     if(isAdmin(msg)) {
 
@@ -412,6 +420,64 @@ async function openTheDoor() {
     await sleep(300);
     door_gpio.write(Gpio.VALUE.HIGH);
 
+}
+
+async function handleAudio(msg) {
+
+    if(isAdmin(msg)) {
+        
+        let fileid = null;
+        let filename;
+
+        if(msg.audio !== null) {
+            fileid = msg.audio.file_id;
+            filename = msg.audio.file_name;
+        } else if(msg.voice !== null) {
+            fileid = msg.voice.file_id;
+            filename = msg.voice.file_name;
+        }
+
+        if(fileid !== null) {
+
+            const message = await bot.sendMessage(msg.chat.id, "Downloading file...");
+
+            const filePath = `/tmp/record${filename.split('.').reverse()[0]}`;
+            await bot.downloadFile(fileid, filePath);
+
+            bot.editMessageText('Playing...', {
+                chat_id: message.chat.id,
+                message_id: message.message_id
+            });
+
+            speaker_gpio.write(Gpio.VALUE.LOW);
+            await audio.play(filePath);
+            await audio.play('./audio/beep.ogg');
+            speaker_gpio.write(Gpio.VALUE.HIGH);
+
+            bot.editMessageText('Recording response...', {
+                chat_id: message.chat.id,
+                message_id: message.message_id
+            });
+
+            const responseFilePath = '/tmp/record.ogg';
+            const duration = 10;
+
+            mic_gpio.write(Gpio.VALUE.LOW);
+            await audio.record(responseFilePath, duration);
+            mic_gpio.write(Gpio.VALUE.HIGH);
+
+            speaker_gpio.write(Gpio.VALUE.LOW);
+            await audio.play('./audio/beep.ogg');
+            speaker_gpio.write(Gpio.VALUE.HIGH);
+
+            bot.deleteMessage(message.chat.id, message.message_id);
+            bot.sendAudio(msg.chat.id, responseFilePath);
+
+        }
+
+    } else {
+        bot.sendMessage(msg.chat.id, "Not authorized.");
+    }
 }
 
 function userSummary(user) {
