@@ -401,7 +401,7 @@ function userOptionsInlineKeyboard(user) {
     ];
 }
 
-function openTheDoor() {
+async function openTheDoor() {
 
     door_gpio.write(Gpio.VALUE.LOW);
     await sleep(300);
