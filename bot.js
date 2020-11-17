@@ -427,22 +427,19 @@ async function handleAudio(msg) {
     if(isAdmin(msg)) {
         
         let fileid = null;
-        let filename;
 
-        if(msg.audio !== null) {
+        if(msg.audio != null) {
             fileid = msg.audio.file_id;
-            filename = msg.audio.file_name;
-        } else if(msg.voice !== null) {
+        } else if(msg.voice != null) {
             fileid = msg.voice.file_id;
-            filename = msg.voice.file_name;
         }
 
         if(fileid !== null) {
 
             const message = await bot.sendMessage(msg.chat.id, "Downloading file...");
 
-            const filePath = `/tmp/record${filename.split('.').reverse()[0]}`;
-            await bot.downloadFile(fileid, filePath);
+            const filePath = `/tmp/`;
+            const fileName = await bot.downloadFile(fileid, filePath);
 
             bot.editMessageText('Playing...', {
                 chat_id: message.chat.id,
@@ -450,7 +447,7 @@ async function handleAudio(msg) {
             });
 
             speaker_gpio.write(Gpio.VALUE.LOW);
-            await audio.play(filePath);
+            await audio.play(fileName);
             await audio.play('./audio/beep.ogg');
             speaker_gpio.write(Gpio.VALUE.HIGH);
 
