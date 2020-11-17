@@ -14,9 +14,10 @@ const bot = new TelegramBot(secrets.token, {polling: true});
 
 const door_gpio = new Gpio.Gpio(secrets.door_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
 door_gpio.write(Gpio.VALUE.HIGH);
-setInterval(() => {
-    door_gpio.write(Gpio.VALUE.HIGH);
-}, 1000);
+const speaker_gpio = new Gpio.Gpio(secrets.speaker_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
+speaker_gpio.write(Gpio.VALUE.HIGH);
+const mic_gpio = new Gpio.Gpio(secrets.mic_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
+mic_gpio.write(Gpio.VALUE.HIGH);
 
 bot.on("polling_error", (err) => console.log(err));
 
@@ -145,9 +146,17 @@ bot.onText(/\/banned/, (msg) => {
 
 bot.onText(/\/open/, async (msg) => {
     if(isAdmin(msg) || hasPremission(msg, "open")) {
+        
         door_gpio.write(Gpio.VALUE.LOW);
+        /*DEBUG*/ speaker_gpio.write(Gpio.VALUE.LOW);
+        /*DEBUG*/ mic_gpio.write(Gpio.VALUE.LOW);
+
         await sleep(500);
+        
         door_gpio.write(Gpio.VALUE.HIGH);
+        /*DEBUG*/ speaker_gpio.write(Gpio.VALUE.HIGH);
+        /*DEBUG*/ mic_gpio.write(Gpio.VALUE.HIGH);
+        
         bot.sendMessage(msg.chat.id, "Done.");
     } else {
         bot.sendMessage(msg.chat.id, "Unauthorized.");
