@@ -300,6 +300,7 @@ bot.on('callback_query', async (query) => {
         
             speaker_gpio.write(Gpio.VALUE.LOW);
             await audio.play("./audio/not_at_home.ogg");
+            await audio.play("./audio/beep.ogg");
             speaker_gpio.write(Gpio.VALUE.HIGH);
 
             bot.editMessageText("Played. \"I'm not at home, leave a message\"", {
@@ -317,6 +318,11 @@ bot.on('callback_query', async (query) => {
             await audio.record(filename, duration);
             
             mic_gpio.write(Gpio.VALUE.HIGH);
+
+            speaker_gpio.write(Gpio.VALUE.LOW);
+            await audio.play("./audio/not_at_home.ogg");
+            await audio.play("./audio/beep.ogg");
+            speaker_gpio.write(Gpio.VALUE.HIGH);
 
             bot.sendAudio(query.message.chat.id, filename);
 
