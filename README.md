@@ -22,7 +22,11 @@ Telegram bot that manages a traditional, old school, intercom
     "admin" : "YOUR_TELEGRAM_USERNAME_HERE",
     "door_pin" : PIN_NUMBER_HERE,
     "speaker_pin": PIN_NUMBER_HERE,
-    "mic_pin": PIN_NUMBER_HERE
+    "mic_pin": PIN_NUMBER_HERE,
+    "speaker_device": SPEAKER_DEVICE_HERE,
+    "speaker_volume": SPEAKER_VOLUME_HERE,
+    "mic_device": MICROHPONE_DEVICE_HERE,
+    "mic_volume": MICROPHONE_VOLUME_HERE
   }
   ```
   Where:
@@ -31,6 +35,10 @@ Telegram bot that manages a traditional, old school, intercom
   - `door_pin` is the gpio pin number that will trigger the door opening
   - `speaker_pin` is the gpio pin number that will trigger the speaker relay
   - `mic_pin` is the gpio pin number that will trigger the microphone relay
+  - `speaker_device` is the name of the speaker you will use, run `pacmd list-sinks | grep name:` to print the list
+  - `speaker_volume` is the default volume of the speaker (0x0-0x10000)
+  - `mic_device` is the name of the microphone you will use, run `pacmd list-sources | grep name:` to print the list
+  - `mic_volume` is the default volume of the microphone (0x0-0x10000)
 - Run `npm install` in the project folder
 - Allow him to run the tee command as root without a password, run `visudo` and add this line at the end of that file, where N1, N2, ... are the gpio pin numbers that you will be using (the ones that are specified in `the secrets.json` file)
   ```

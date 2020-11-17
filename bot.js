@@ -2,6 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const { JsonDB } = require('node-json-db');
 const { Config } = require('node-json-db/dist/lib/JsonDBConfig');
 const Gpio = require("./gpio");
+const { AudioController } = require('./audio');
 
 const secrets = require('./secrets.json');
 
@@ -18,6 +19,8 @@ const speaker_gpio = new Gpio.Gpio(secrets.speaker_pin, Gpio.DIRECTION.OUTPUT, G
 speaker_gpio.write(Gpio.VALUE.HIGH);
 const mic_gpio = new Gpio.Gpio(secrets.mic_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
 mic_gpio.write(Gpio.VALUE.HIGH);
+
+const audio = new AudioController(secrets.speaker_device, secrets.speaker_volume, secrets.mic_device, secrets.mic_volume);
 
 bot.on("polling_error", (err) => console.log(err));
 
@@ -148,16 +151,36 @@ bot.onText(/\/open/, async (msg) => {
     if(isAdmin(msg) || hasPremission(msg, "open")) {
         
         door_gpio.write(Gpio.VALUE.LOW);
-        /*DEBUG*/ speaker_gpio.write(Gpio.VALUE.LOW);
-        /*DEBUG*/ mic_gpio.write(Gpio.VALUE.LOW);
+        // /*DEBUG*/ speaker_gpio.write(Gpio.VALUE.LOW);
+        // /*DEBUG*/ mic_gpio.write(Gpio.VALUE.LOW);
 
-        await sleep(500);
+        await sleep(300);
         
         door_gpio.write(Gpio.VALUE.HIGH);
-        /*DEBUG*/ speaker_gpio.write(Gpio.VALUE.HIGH);
-        /*DEBUG*/ mic_gpio.write(Gpio.VALUE.HIGH);
-        
+        // /*DEBUG*/ speaker_gpio.write(Gpio.VALUE.HIGH);
+        // /*DEBUG*/ mic_gpio.write(Gpio.VALUE.HIGH);
+
         bot.sendMessage(msg.chat.id, "Done.");
+    } else {
+        bot.sendMessage(msg.chat.id, "Unauthorized.");
+    }
+});
+
+bot.onText(/\/open/, async (msg) => {
+    if(isAdmin(msg)) {
+
+        const tmp = await bot.sendMessage(msg.chat.id, "Playing...");
+        
+        speaker_gpio.write(Gpio.VALUE.LOW);
+
+        await audio.play("/home/carlo/minecraft.mp3");
+        
+        speaker_gpio.write(Gpio.VALUE.HIGH);
+
+        bot.editMessageText("Played.", {
+            chat_id: tmp.chat.id,
+            message_id: tmp.message_id
+        });
     } else {
         bot.sendMessage(msg.chat.id, "Unauthorized.");
     }

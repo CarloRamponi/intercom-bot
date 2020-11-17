@@ -18,10 +18,12 @@ class Gpio {
         this.direction = direction;
 
         //create gpio
-        exec(`echo ${pin} | sudo tee /sys/class/gpio/export`);
+        exec(`echo ${pin} | sudo tee /sys/class/gpio/export`, (err, stdout, sterr) => {
 
-        //set pin direction
-        exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} | sudo tee /sys/class/gpio/gpio${pin}/direction`);
+            //set pin direction
+            exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} | sudo tee /sys/class/gpio/gpio${pin}/direction`);
+
+        });
         
     }
 
