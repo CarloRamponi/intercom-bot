@@ -13,9 +13,9 @@ const db = new JsonDB(new Config("database", true, false, '/'));
 const bot = new TelegramBot(secrets.token, {polling: true});
 
 const door_gpio = new Gpio.Gpio(secrets.door_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
-door_gpio.write(Gpio.HIGH);
+door_gpio.write(Gpio.VALUE.HIGH);
 setInterval(() => {
-    door_gpio.write(Gpio.HIGH);
+    door_gpio.write(Gpio.VALUE.HIGH);
 }, 1000);
 
 bot.on("polling_error", (err) => console.log(err));

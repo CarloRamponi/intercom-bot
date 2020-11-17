@@ -27,7 +27,7 @@ class Gpio {
 
     write(value) {
         if(this.direction == DIRECTION.OUTPUT) {
-            exec(`echo ${value == VALUE.HIGH? "1" : "0"} | sudo tee /sys/class/gpio/gpio${this.pin}/value`)
+            exec(`echo ${value == VALUE.LOW? "0" : "1"} | sudo tee /sys/class/gpio/gpio${this.pin}/value`)
         } else {
             throw "Can't wirte on a GPIO PIN that is not set to OUTPUT";
         }
