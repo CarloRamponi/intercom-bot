@@ -319,12 +319,11 @@ bot.on('callback_query', async (query) => {
             
             mic_gpio.write(Gpio.VALUE.HIGH);
 
+            bot.sendAudio(query.message.chat.id, filename);
+
             speaker_gpio.write(Gpio.VALUE.LOW);
-            await audio.play("./audio/not_at_home.ogg");
             await audio.play("./audio/beep.ogg");
             speaker_gpio.write(Gpio.VALUE.HIGH);
-
-            bot.sendAudio(query.message.chat.id, filename);
 
         }
   
