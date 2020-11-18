@@ -41,10 +41,6 @@ Telegram bot that manages a traditional, old school, intercom
   - `door_pin` is the gpio pin number that will trigger the door opening
   - `speaker_pin` is the gpio pin number that will trigger the speaker relay
   - `mic_pin` is the gpio pin number that will trigger the microphone relay
-  - `speaker_device` is the name of the speaker you will use, run `pacmd list-sinks | grep name:` to print the list
-  - `speaker_volume` is the default volume of the speaker (0x0-0x10000)
-  - `mic_device` is the name of the microphone you will use, run `pacmd list-sources | grep name:` to print the list
-  - `mic_volume` is the default volume of the microphone (0x0-0x10000)
 - Run `npm install` in the project folder
 - Set up your device audio in a way that the default audio card is the one that you want the bot to use, in my case:
   - List the available devices:
@@ -89,7 +85,6 @@ Telegram bot that manages a traditional, old school, intercom
   ```
   intercombot ALL= NOPASSWD: /usr/bin/tee /sys/class/gpio/export, /usr/bin/tee /sys/class/gpio/gpioN1/value, /usr/bin/tee /sys/class/gpio/gpioN1/direction, /usr/bin/tee /sys/class/gpio/gpioN2/value, /usr/bin/tee /sys/class/gpio/gpioN2/direction, ...
   ```
-  This allows him to kick ssh connections if needed, reboot the system and start/stop sshd service
 - Create the service file `/lib/systemd/system/intercom-bot.service`
   ```
   [Unit]
