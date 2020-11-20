@@ -31,16 +31,16 @@ Telegram bot that manages a traditional, old school, intercom
     "token" : "YOUR_TOKEN_HERE",
     "admin" : "YOUR_TELEGRAM_USERNAME_HERE",
     "door_pin" : PIN_NUMBER_HERE,
-    "speaker_pin": PIN_NUMBER_HERE,
-    "mic_pin": PIN_NUMBER_HERE,
+    "bell_pin" : PIN_NUMBER_HERE,
+    "audio_pins": [PIN_NUMBER_HERE, PIN_NUMBER_HERE, ...]
   }
   ```
   Where:
   - `token` is the bot token provided by the botfather,
   - `admin` is your telegram username
   - `door_pin` is the gpio pin number that will trigger the door opening
-  - `speaker_pin` is the gpio pin number that will trigger the speaker relay
-  - `mic_pin` is the gpio pin number that will trigger the microphone relay
+  - `bell_pin` is the gpio pin number that will detect when the intercom button is pressed
+  - `audio_pins` are the gpio pin numbers that will trigger the relays that will connect the speaker and mic to the intercom
 - Run `npm install` in the project folder
 - Set up your device audio in a way that the default audio card is the one that you want the bot to use, in my case:
   - List the available devices:

@@ -1,62 +1,113 @@
 const { exec } = require('child_process');
-
-const DIRECTION = {
-    OUTPUT: 0,
-    INPUT: 0
-};
+const { access } = require('fs');
+const { resolve } = require('path');
+const { stderr } = require('process');
 
 const VALUE = {
     HIGH: 1,
     LOW: 0
 };
 
-class Gpio {
+class GpioOUT {
 
-    constructor(pin, direction, def) {
+    constructor(pin, value) {
         
         this.pin = pin;
-        this.direction = direction;
+        this.value = value !== null ? value : VALUE.LOW;
 
-        //create gpio
-        exec(`echo ${pin} | sudo tee /sys/class/gpio/export`, (err, stdout, sterr) => {
-
-            //set pin direction
-            exec(`echo ${direction == DIRECTION.OUTPUT ? "out" : "in"} | sudo tee /sys/class/gpio/gpio${pin}/direction`, (err, stdout, stderr) => {
-                if(def !== null) {
-                    this.write(def);
-                }
-            });
-
+        //create gpio, set direction and set default value
+        exec(`echo ${pin} | sudo tee /sys/class/gpio/export; echo out | sudo tee /sys/class/gpio/gpio${pin}/direction; echo ${this.value} | sudo tee /sys/class/gpio/gpio${pin}/value`, (err, stdout, stderr) => {
+            if(err) {
+                throw `GPIO ERROR: ${stderr}`;
+            }
         });
         
     }
 
     write(value) {
-        if(this.direction == DIRECTION.OUTPUT) {
-            exec(`echo ${value == VALUE.LOW? "0" : "1"} | sudo tee /sys/class/gpio/gpio${this.pin}/value`)
-        } else {
-            throw "Can't wirte on a GPIO PIN that is not set to OUTPUT";
-        }
-    }
 
-    read() {
-        return new Promise((resolve, reject) => {
-            exec(`cat /sys/class/gpio/gpio${this.pin}/value`, (err, stdout, stderr) => {
+        if(value != this.value) {
+            this.value = value;
+
+            exec(`echo ${this.value} | sudo tee /sys/class/gpio/gpio${this.pin}/value`, (err, stdout, stderr) => {
                 if(err) {
-                    reject(stderr);
-                } else {
-                    if(stdout == "1") {
-                        resolve(VALUE.HIGH);
-                    } else {
-                        resolve(VALUE.LOW);
-                    }
+                    throw `GPIO ERROR: ${stderr}`;
                 }
-            })
-        })
+            });
+
+        }
+
     }
 
 };
 
-exports.Gpio = Gpio;
-exports.DIRECTION = DIRECTION;
-exports.VALUE = VALUE;
+class GpioIN {
+
+    constructor(pin, onChange, activeListen) {
+        
+        this.pin = pin;
+        this.onChange = onChange;
+        this.activeListen = activeListen;
+        this.value = VALUE.LOW;
+
+        //create gpio, set direction and set default value
+        exec(`echo ${this.pin} | sudo tee /sys/class/gpio/export; echo in | sudo tee /sys/class/gpio/gpio${this.pin}/direction`, (err, stdout, stderr) => {
+            if(err) {
+                throw `GPIO ERROR: ${stderr}`;
+            }
+        });
+
+        if(activeListen === true) {
+            this._listen();
+        }
+        
+    }
+
+    async _listen() {
+
+        while(true) {
+
+            const value = await new Promise((resolve, reject) => {
+                /** this loop with sleep 0.15 will take from 1.0% to 2.0% of CPU usage */
+                exec(`while [ $(cat /sys/class/gpio/gpio${this.pin}/value) = "${this.value}" ]; do sleep 0.10; done;`, (err, stdout, stderr) => {
+                    if(err) {
+                        reject(`GPIO ERROR: ${stderr}`);
+                    } else {
+                        resolve(1 - this.value);
+                    }
+                })
+            })
+            
+            this.value = value;
+            if(this.onChange !== null) {
+                this.onChange(value, this);
+            }
+
+        }
+
+    }
+
+    read() {
+        if(this.activeListen === true) {
+            return new Promise((resolve, reject) => resolve(this.value));
+        } else {
+            return new Promise((resolve, reject) => {
+                exec(`cat /sys/class/gpio/gpio10/value`, (err, stdout, stderr) => {
+                    if(err) {
+                        reject(`GPIO ERROR: ${stderr}`);
+                    }
+
+                    resolve(parseInt(stdout));
+                    
+                });
+            });
+        }
+    }
+
+}
+
+module.exports = {
+    GpioOUT,
+    GpioIN,
+    VALUE
+}

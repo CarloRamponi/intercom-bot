@@ -5,6 +5,7 @@ const Gpio = require("./gpio");
 const { AudioController } = require('./audio');
 
 const secrets = require('./secrets.json');
+const gpio = require('./gpio');
 
 console.log(`Starting Intercom Bot with:\nAdmin: ${secrets.admin}\nToken: ${secrets.token}`);
 
@@ -13,9 +14,15 @@ const db = new JsonDB(new Config("database", true, false, '/'));
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(secrets.token, {polling: true});
 
-const door_gpio = new Gpio.Gpio(secrets.door_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
-const speaker_gpio = new Gpio.Gpio(secrets.speaker_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
-const mic_gpio = new Gpio.Gpio(secrets.mic_pin, Gpio.DIRECTION.OUTPUT, Gpio.VALUE.HIGH);
+const door_gpio = new Gpio.GpioOUT(secrets.door_pin, Gpio.VALUE.HIGH);
+
+const bell_pin = new Gpio.GpioIN(secrets.bell_pin, (value) => {
+    if(value === gpio.VALUE.HIGH) {
+        notifyBell();
+    }
+});
+
+const audio_gpios = secrets.audio_pins.map((pin) => new Gpio.GpioOUT(pin, Gpio.VALUE.HIGH));
 
 const audio = new AudioController();
 
@@ -27,25 +34,14 @@ bot.onText(/\/start/, (msg) => {
         bot.sendMessage(msg.chat.id, "Please, set an username in order to use this bot\nAfter that type /start again");
     } else {
         if(isAdmin(msg)) {
+
             bot.sendMessage(msg.chat.id, "Hi Boss, how may I help you?");
+
         } else {
-            try {
-                const index = db.getIndex("/known_users", msg.chat.username);
 
-                const user = db.getData(`/known_users[${index}]`);
-                if(!user.adminNotified) {
-                    const id = getAdminChatid();
-                    if(id !== null) {
-                        db.push(`/known_users[${index}]/adminNotified`, true);
-                        bot.sendMessage(msg.chat.id, "Hi " + msg.chat.first_name + " " + msg.chat.last_name + ",\nSince I don't know who you are, I will ask my boss what to do...\nI will let you know what he'll decide.");
-                        bot.sendMessage(id, `New User`);
-                        sendUserSummary(id, user);
-                    }
-                } else {
-                    bot.sendMessage(msg.chat.id, "My boss has been notified, just wait!");
-                }
+            const user = getUserFromMsg(msg);
 
-            } catch (error) {
+            if(user === null) {
 
                 try {
 
@@ -77,8 +73,23 @@ bot.onText(/\/start/, (msg) => {
                     }
 
                 }
-                
+
+            } else {
+
+                if(!user.adminNotified) {
+                    const id = getAdminChatid();
+                    if(id !== null) {
+                        db.push(`/known_users[${index}]/adminNotified`, true);
+                        bot.sendMessage(msg.chat.id, "Hi " + msg.chat.first_name + " " + msg.chat.last_name + ",\nSince I don't know who you are, I will ask my boss what to do...\nI will let you know what he'll decide.");
+                        bot.sendMessage(id, `New User`);
+                        sendUserSummary(id, user);
+                    }
+                } else {
+                    bot.sendMessage(msg.chat.id, "My boss has been notified, just wait!");
+                }
+
             }
+
         }
     }
 });
@@ -158,6 +169,13 @@ bot.onText(/\/open/, async (msg) => {
         openTheDoor();
 
         bot.sendMessage(msg.chat.id, "Done.");
+
+        if(!isAdmin(msg)) {
+            const user = getUserFromMsg(msg);
+            bot.sendMessage(getAdminChatid(), `User: *${user.name}* just opened the door.`, {
+                parse_mode: "Markdown"
+            });
+        }
     } else {
         bot.sendMessage(msg.chat.id, "Unauthorized.");
     }
@@ -167,25 +185,7 @@ bot.onText(/\/open/, async (msg) => {
 bot.onText(/\/test/, async (msg) => {
     if(isAdmin(msg)) {
 
-        bot.sendMessage(getAdminChatid(), "🔔🔔🔔🔔🔔🔔🔔🔔", {
-            parse_mode: "Markdown",
-            reply_markup: {
-                inline_keyboard: [
-                    [ {
-                        text: "I'm not at home, leave a message",
-                        callback_data: "/not_at_home"
-                    } ],
-                    [ {
-                        text: "Call me",
-                        callback_data: "/call_me"
-                    } ],
-                    [ {
-                        text: "Leave the package inside",
-                        callback_data: "/package_inside"
-                    } ]
-                ]
-            }
-        });
+        notifyBell();
         
     } else {
         bot.sendMessage(msg.chat.id, "Unauthorized.");
@@ -306,10 +306,10 @@ bot.on('callback_query', async (query) => {
 
             const tmp = await bot.sendMessage(query.message.chat.id, "Playing \"I'm not at home, leave a message\"...");
         
-            speaker_gpio.write(Gpio.VALUE.LOW);
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
+            
             await audio.play("./audio/not_at_home.ogg");
             await audio.play("./audio/beep.ogg");
-            speaker_gpio.write(Gpio.VALUE.HIGH);
 
             bot.editMessageText("Played. \"I'm not at home, leave a message\"", {
                 chat_id: tmp.chat.id,
@@ -317,15 +317,13 @@ bot.on('callback_query', async (query) => {
             });
 
             const message = await bot.sendMessage(query.message.chat.id, "Recording response...");
-
-            mic_gpio.write(Gpio.VALUE.LOW);
             
             const filename = "/tmp/record.ogg";
-            const duration = 10;
+            const duration = 6;
 
             await audio.record(filename, duration);
             
-            mic_gpio.write(Gpio.VALUE.HIGH);
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
             bot.deleteMessage(message.chat.id, message.message_id);
             bot.sendAudio(query.message.chat.id, filename);
@@ -345,9 +343,9 @@ bot.on('callback_query', async (query) => {
 
             const tmp = await bot.sendMessage(query.message.chat.id, "Playing \"Call me\"...");
         
-            speaker_gpio.write(Gpio.VALUE.LOW);
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
             await audio.play("./audio/call_me.ogg");
-            speaker_gpio.write(Gpio.VALUE.HIGH);
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
             bot.editMessageText("Played. \"Call me\"", {
                 chat_id: tmp.chat.id,
@@ -365,9 +363,9 @@ bot.on('callback_query', async (query) => {
 
             const tmp = await bot.sendMessage(query.message.chat.id, "Playing \"Leave the package inside\"...");
         
-            speaker_gpio.write(Gpio.VALUE.LOW);
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
             await audio.play("./audio/leave_the_package_inside.ogg");
-            speaker_gpio.write(Gpio.VALUE.HIGH);
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
             bot.editMessageText("Played. \"Leave the package inside\"", {
                 chat_id: tmp.chat.id,
@@ -381,6 +379,30 @@ bot.on('callback_query', async (query) => {
     }
   
   });
+
+function notifyBell() {
+
+    bot.sendMessage(getAdminChatid(), "🔔🔔🔔🔔🔔🔔🔔🔔", {
+        parse_mode: "Markdown",
+        reply_markup: {
+            inline_keyboard: [
+                [ {
+                    text: "I'm not at home, leave a message",
+                    callback_data: "/not_at_home"
+                } ],
+                [ {
+                    text: "Call me",
+                    callback_data: "/call_me"
+                } ],
+                [ {
+                    text: "Leave the package inside",
+                    callback_data: "/package_inside"
+                } ]
+            ]
+        }
+    });
+
+}
 
 function userOptionsInlineKeyboard(user) {
     return [
@@ -447,10 +469,9 @@ async function handleAudio(msg) {
                 message_id: message.message_id
             });
 
-            speaker_gpio.write(Gpio.VALUE.LOW);
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
             await audio.play(fileName);
             await audio.play('./audio/beep.ogg');
-            speaker_gpio.write(Gpio.VALUE.HIGH);
 
             bot.editMessageText('Recording response...', {
                 chat_id: message.chat.id,
@@ -458,24 +479,35 @@ async function handleAudio(msg) {
             });
 
             const responseFilePath = '/tmp/record.ogg';
-            const duration = 10;
+            const duration = 6;
 
-            mic_gpio.write(Gpio.VALUE.LOW);
+            
             await audio.record(responseFilePath, duration);
-            mic_gpio.write(Gpio.VALUE.HIGH);
-
-            speaker_gpio.write(Gpio.VALUE.LOW);
-            await audio.play('./audio/beep.ogg');
-            speaker_gpio.write(Gpio.VALUE.HIGH);
 
             bot.deleteMessage(message.chat.id, message.message_id);
             bot.sendAudio(msg.chat.id, responseFilePath);
+
+            await audio.play('./audio/beep.ogg');
+            
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
 
         }
 
     } else {
         bot.sendMessage(msg.chat.id, "Not authorized.");
     }
+}
+
+function getUserFromMsg(msg) {
+
+    try {
+        const index = db.getIndex("/known_users", msg.chat.username);
+        const user = db.getData(`/known_users[${index}]`);
+        return user;
+    } catch (error) {
+        return null;
+    }
+
 }
 
 function userSummary(user) {
@@ -512,11 +544,13 @@ function getAdminChatid() {
 
 function hasPremission(msg, permission) {
     const username = msg.chat.username;
-    try {
-        const index = db.getIndex(`/known_users`, username);
-        return db.getData(`/known_users[${index}]/permissions/${permission}`);
-    } catch(error) {
-        return false;
+    if(username != null) {
+        try {
+            const index = db.getIndex(`/known_users`, username);
+            return db.getData(`/known_users[${index}]/permissions/${permission}`);
+        } catch(error) {
+            return false;
+        }
     }
 }
 
