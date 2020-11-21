@@ -116,5 +116,5 @@ Telegram bot that manages a traditional, old school, intercom
 
 Here you are the schematics of my layout, I honestly think that it won't be useful to anyone because it's very specific
 
-![](schematics/general.png)
-![](schematics/AC-DC_Converter.png)
+![General](schematics/general.png)
+![12V AC - ~3.5V DC converter](schematics/AC-DC_Converter.png)
