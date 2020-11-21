@@ -489,7 +489,7 @@ async function handleAudio(msg) {
 
             await audio.play('./audio/beep.ogg');
             
-            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
         }
 
