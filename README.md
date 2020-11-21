@@ -111,3 +111,10 @@ Telegram bot that manages a traditional, old school, intercom
   systemctl start intercom-bot
   systemctl status intercom-bot
   ```
+
+## Schematics
+
+Here you are the schematics of my layout, I honestly think that it won't be useful to anyone because it's very specific
+
+![](schematics/general.png)
+![](schematics/AC-DC_Converter.png)
