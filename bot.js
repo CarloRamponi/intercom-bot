@@ -20,7 +20,7 @@ const bell_pin = new Gpio.GpioIN(secrets.bell_pin, (value) => {
     if(value === gpio.VALUE.HIGH) {
         notifyBell();
     }
-});
+}, true);
 
 const audio_gpios = secrets.audio_pins.map((pin) => new Gpio.GpioOUT(pin, Gpio.VALUE.HIGH));
 

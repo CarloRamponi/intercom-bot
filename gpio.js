@@ -48,7 +48,7 @@ class GpioIN {
         this.pin = pin;
         this.onChange = onChange;
         this.activeListen = activeListen;
-        this.value = VALUE.LOW;
+        this.value = VALUE.HIGH;
 
         //create gpio, set direction and set default value
         exec(`echo ${this.pin} | sudo tee /sys/class/gpio/export; echo in | sudo tee /sys/class/gpio/gpio${this.pin}/direction`, (err, stdout, stderr) => {

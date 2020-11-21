@@ -17,7 +17,7 @@ class AudioController {
 
     record(filename, duration) {
         return new Promise((resolve, reject) => {
-            exec(`arecord -f cd -c 1 -d ${duration} -t raw | oggenc - -r -o ${filename}`, (err, stdout, stderr) => {
+            exec(`arecord -f cd -c 1 -d ${duration} -t raw | oggenc - -C 1 -r -o ${filename}`, (err, stdout, stderr) => {
                 if(err) {
                     reject(stderr);
                 } else {
