@@ -2,31 +2,48 @@ const { exec } = require('child_process');
 const { access } = require('fs');
 
 class AudioController {
+
+    constructor() {
+        this.busy = false;
+    }
     
     play(filename) {
         return new Promise((resolve, reject) => {
-            exec(`mpv --no-video ${filename}`, (err, stdout, stderr) => {
-                if(err) {
-                    reject(stderr);
-                } else {
-                    resolve();
-                }
-            })
+            if(this.busy) {
+                reject("Audio Controller is busy");
+            } else {
+                this.busy = true;
+                exec(`mpv --no-video ${filename}`, (err, stdout, stderr) => {
+                    this.busy = false;
+                    if(err) {
+                        reject(stderr);
+                    } else {
+                        resolve();
+                    }
+                })
+            }
+            
         });
     }
 
     record(filename, duration) {
         return new Promise((resolve, reject) => {
-            exec(`arecord -f cd -c 1 -d ${duration} -t raw | oggenc - -C 1 -r -o ${filename}`, (err, stdout, stderr) => {
-                if(err) {
-                    reject(stderr);
-                } else {
-                    resolve();
-                }
-            })
+            if(this.busy) {
+                reject("Audio Controller is busy");
+            } else {
+                this.busy = true;
+                exec(`arecord -f cd -c 1 -d ${duration} -t raw | oggenc - -C 1 -r -o ${filename}`, (err, stdout, stderr) => {
+                    this.busy = false;
+                    if(err) {
+                        reject(stderr);
+                    } else {
+                        resolve();
+                    }
+                })
+            }
         })
     }
 
 }
 
-exports.AudioController = AudioController;
+module.exports = AudioController;

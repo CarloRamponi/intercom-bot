@@ -2,7 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const { JsonDB } = require('node-json-db');
 const { Config } = require('node-json-db/dist/lib/JsonDBConfig');
 const Gpio = require("./gpio");
-const { AudioController } = require('./audio');
+const AudioController = require('./audio');
 
 const secrets = require('./secrets.json');
 const gpio = require('./gpio');
@@ -35,20 +35,29 @@ bot.onText(/\/start/, (msg) => {
     } else {
         if(isAdmin(msg)) {
 
+            console.log("It is admin.");
             bot.sendMessage(msg.chat.id, "Hi Boss, how may I help you?");
 
         } else {
 
             const user = getUserFromMsg(msg);
 
+            console.log(`Not an admin, user: ${user}`);
+
             if(user === null) {
+
+                console.log(`User was null, searching into banned users`);
 
                 try {
 
                     db.getIndex(`/banned_users`, msg.chat.username);
                     bot.sendMessage(msg.chat.id, "Sorry, you have been banned.");
 
+                    console.log(`User @${msg.chat.username} was banned`);
+
                 } catch(error) {
+
+                    console.log(`User @${msg.chat.username} was NOT banned, sending welcome message`);
 
                     bot.sendMessage(msg.chat.id, "Hi " + msg.chat.first_name + " " + msg.chat.last_name + ",\nSince I don't know who you are, I will ask my boss what to do...\nI will let you know what he'll decide.");
                 
@@ -65,6 +74,8 @@ bot.onText(/\/start/, (msg) => {
                         adminNotified: id !== null
                     }
 
+                    console.log(`Pushing user @${msg.chat.username} into /known_users collection`);
+
                     db.push("/known_users[]", user);
 
                     if(id !== null) {
@@ -76,7 +87,12 @@ bot.onText(/\/start/, (msg) => {
 
             } else {
 
+                console.log(`User was NOT null, let's see if the admin has been already notified of this new user`);
+
                 if(!user.adminNotified) {
+
+                    console.log(`Admin was not yet notified of this user, sending notification...`);
+
                     const id = getAdminChatid();
                     if(id !== null) {
                         db.push(`/known_users[${index}]/adminNotified`, true);
@@ -85,6 +101,9 @@ bot.onText(/\/start/, (msg) => {
                         sendUserSummary(id, user);
                     }
                 } else {
+
+                    console.log(`Admin had already been notified, not sending any notification!`);
+
                     bot.sendMessage(msg.chat.id, "My boss has been notified, just wait!");
                 }
 
@@ -306,31 +325,37 @@ bot.on('callback_query', async (query) => {
 
             const tmp = await bot.sendMessage(query.message.chat.id, "Playing \"I'm not at home, leave a message\"...");
         
-            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
+            if(!audio.busy) {
+
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
             
-            await audio.play("./audio/not_at_home.ogg");
-            await audio.play("./audio/beep.ogg");
+                await audio.play("./audio/not_at_home.ogg").catch(errorHandler);
+                await audio.play("./audio/beep.ogg").catch(errorHandler);
 
-            bot.editMessageText("Played. \"I'm not at home, leave a message\"", {
-                chat_id: tmp.chat.id,
-                message_id: tmp.message_id
-            });
+                bot.editMessageText("Played. \"I'm not at home, leave a message\"", {
+                    chat_id: tmp.chat.id,
+                    message_id: tmp.message_id
+                });
 
-            const message = await bot.sendMessage(query.message.chat.id, "Recording response...");
-            
-            const filename = "/tmp/record.ogg";
-            const duration = 6;
+                const message = await bot.sendMessage(query.message.chat.id, "Recording response...");
+                
+                const filename = "/tmp/record.ogg";
+                const duration = 6;
 
-            await audio.record(filename, duration);
-            
-            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
+                await audio.record(filename, duration).catch(errorHandler);
+                
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
-            bot.deleteMessage(message.chat.id, message.message_id);
-            bot.sendAudio(query.message.chat.id, filename);
+                bot.deleteMessage(message.chat.id, message.message_id);
+                bot.sendAudio(query.message.chat.id, filename);
 
-            speaker_gpio.write(Gpio.VALUE.LOW);
-            await audio.play("./audio/beep.ogg");
-            speaker_gpio.write(Gpio.VALUE.HIGH);
+                speaker_gpio.write(Gpio.VALUE.LOW);
+                await audio.play("./audio/beep.ogg").catch(errorHandler);
+                speaker_gpio.write(Gpio.VALUE.HIGH);
+
+            } else {
+                bot.sendMessage(query.message.chat.id, "Can't do that. Audio Controller is busy right now");
+            }
 
         }
   
@@ -343,14 +368,20 @@ bot.on('callback_query', async (query) => {
 
             const tmp = await bot.sendMessage(query.message.chat.id, "Playing \"Call me\"...");
         
-            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
-            await audio.play("./audio/call_me.ogg");
-            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
+            if(!audio.busy) {
 
-            bot.editMessageText("Played. \"Call me\"", {
-                chat_id: tmp.chat.id,
-                message_id: tmp.message_id
-            });
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
+                await audio.play("./audio/call_me.ogg").catch(errorHandler);
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
+    
+                bot.editMessageText("Played. \"Call me\"", {
+                    chat_id: tmp.chat.id,
+                    message_id: tmp.message_id
+                });
+
+            } else {
+                bot.sendMessage(query.message.chat.id, "Can't do that. Audio Controller is busy right now");
+            }
 
         }
   
@@ -363,16 +394,22 @@ bot.on('callback_query', async (query) => {
 
             const tmp = await bot.sendMessage(query.message.chat.id, "Playing \"Leave the package inside\"...");
         
-            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
-            await audio.play("./audio/leave_the_package_inside.ogg");
-            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
+            if(!audio.busy) {
+                
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
+                await audio.play("./audio/leave_the_package_inside.ogg").catch(errorHandler);
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
+    
+                bot.editMessageText("Played. \"Leave the package inside\"", {
+                    chat_id: tmp.chat.id,
+                    message_id: tmp.message_id
+                });
+    
+                openTheDoor();
 
-            bot.editMessageText("Played. \"Leave the package inside\"", {
-                chat_id: tmp.chat.id,
-                message_id: tmp.message_id
-            });
-
-            openTheDoor();
+            } else {
+                bot.sendMessage(query.message.chat.id, "Can't do that. Audio Controller is busy right now");
+            }
 
         }
   
@@ -382,7 +419,7 @@ bot.on('callback_query', async (query) => {
 
 function notifyBell() {
 
-    bot.sendMessage(getAdminChatid(), "🔔🔔🔔🔔🔔🔔🔔🔔", {
+    bot.sendMessage(getAdminChatid(), "🔔🔔🔔🔔🔔🔔🔔🔔🔔🔔", {
         parse_mode: "Markdown",
         reply_markup: {
             inline_keyboard: [
@@ -402,6 +439,10 @@ function notifyBell() {
         }
     });
 
+}
+
+function errorHandler(error) {
+    bot.sendMessage(getAdminChatid(), `Error: ${error}`);
 }
 
 function userOptionsInlineKeyboard(user) {
@@ -459,37 +500,43 @@ async function handleAudio(msg) {
 
         if(fileid !== null) {
 
-            const message = await bot.sendMessage(msg.chat.id, "Downloading file...");
+            if(!audio.busy) {
 
-            const filePath = `/tmp/`;
-            const fileName = await bot.downloadFile(fileid, filePath);
+                const message = await bot.sendMessage(msg.chat.id, "Downloading file...");
 
-            bot.editMessageText('Playing...', {
-                chat_id: message.chat.id,
-                message_id: message.message_id
-            });
+                const filePath = `/tmp/`;
+                const fileName = await bot.downloadFile(fileid, filePath);
+    
+                bot.editMessageText('Playing...', {
+                    chat_id: message.chat.id,
+                    message_id: message.message_id
+                });
+    
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
+                await audio.play(fileName).catch(errorHandler);
+                await audio.play('./audio/beep.ogg').catch(errorHandler);
+    
+                bot.editMessageText('Recording response...', {
+                    chat_id: message.chat.id,
+                    message_id: message.message_id
+                });
+    
+                const responseFilePath = '/tmp/record.ogg';
+                const duration = 6;
+    
+                
+                await audio.record(responseFilePath, duration).catch(errorHandler);
+    
+                bot.deleteMessage(message.chat.id, message.message_id);
+                bot.sendAudio(msg.chat.id, responseFilePath);
+    
+                await audio.play('./audio/beep.ogg').catch(errorHandler);
+                
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
-            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
-            await audio.play(fileName);
-            await audio.play('./audio/beep.ogg');
-
-            bot.editMessageText('Recording response...', {
-                chat_id: message.chat.id,
-                message_id: message.message_id
-            });
-
-            const responseFilePath = '/tmp/record.ogg';
-            const duration = 6;
-
-            
-            await audio.record(responseFilePath, duration);
-
-            bot.deleteMessage(message.chat.id, message.message_id);
-            bot.sendAudio(msg.chat.id, responseFilePath);
-
-            await audio.play('./audio/beep.ogg');
-            
-            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
+            } else {
+                bot.sendMessage(query.message.chat.id, "Can't do that. Audio Controller is busy right now");
+            }
 
         }
 
