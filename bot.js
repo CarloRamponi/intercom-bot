@@ -222,7 +222,7 @@ bot.onText(/\/record/, async (msg) => {
 
             audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
 
-            const message = await bot.sendMessage(query.message.chat.id, "Recording audio...");
+            const message = await bot.sendMessage(msg.chat.id, "Recording audio...");
             
             const filename = "/tmp/record.ogg";
             const duration = 8;
@@ -233,10 +233,10 @@ bot.onText(/\/record/, async (msg) => {
             audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
             bot.deleteMessage(message.chat.id, message.message_id);
-            bot.sendAudio(query.message.chat.id, filename);
+            bot.sendAudio(msg.chat.id, filename);
 
         } else {
-            bot.sendMessage(query.message.chat.id, "Can't do that. Audio Controller is busy right now");
+            bot.sendMessage(msg.chat.id, "Can't do that. Audio Controller is busy right now");
         }
 
     } else {
