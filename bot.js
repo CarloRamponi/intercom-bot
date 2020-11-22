@@ -468,12 +468,12 @@ function notifyBell() {
                     text: "Leave the package inside",
                     callback_data: "/package_inside"
                 } ]
-            ] + custom_audio_files.map((file) => [
+            ].concat(custom_audio_files.map((file) => [
                 {
                     text: file,
                     callback_data: `/custom_audio ${file}`
                 }
-            ])
+            ]))
         }
     });
 
