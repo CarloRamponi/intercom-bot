@@ -3,6 +3,8 @@ const { JsonDB } = require('node-json-db');
 const { Config } = require('node-json-db/dist/lib/JsonDBConfig');
 const Gpio = require("./gpio");
 const AudioController = require('./audio');
+const path = require('path');
+const fs = require('fs');
 
 const secrets = require('./secrets.json');
 const gpio = require('./gpio');
@@ -25,6 +27,8 @@ const bell_pin = new Gpio.GpioIN(secrets.bell_pin, (value) => {
 const audio_gpios = secrets.audio_pins.map((pin) => new Gpio.GpioOUT(pin, Gpio.VALUE.HIGH));
 
 const audio = new AudioController();
+
+const custom_audio_files = fs.readdirSync(path.join(__dirname, "audio/custom"));
 
 bot.on("polling_error", (err) => console.log(err));
 
@@ -414,6 +418,35 @@ bot.on('callback_query', async (query) => {
         }
   
     }
+
+    match = query.data.match(/\/custom_audio (.+)/);
+    if(match) {
+
+        if(isAdmin(query.message)) {
+
+            let args = match[1].split(" ");
+            let filename = args[0];
+
+            const tmp = await bot.sendMessage(query.message.chat.id, `Playing "${filename}"...`);
+        
+            if(!audio.busy) {
+                
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
+                await audio.play(path,join(__dirname, `audio/custom/${filename}`)).catch(errorHandler);
+                audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
+    
+                bot.editMessageText(`Played. "${filename}"`, {
+                    chat_id: tmp.chat.id,
+                    message_id: tmp.message_id
+                });
+
+            } else {
+                bot.sendMessage(query.message.chat.id, "Can't do that. Audio Controller is busy right now");
+            }
+
+        }
+  
+    }
   
   });
 
@@ -435,7 +468,12 @@ function notifyBell() {
                     text: "Leave the package inside",
                     callback_data: "/package_inside"
                 } ]
-            ]
+            ] + custom_audio_files.map((file) => [
+                {
+                    text: file,
+                    callback_data: `/custom_audio ${file}`
+                }
+            ])
         }
     });
 
@@ -481,7 +519,7 @@ function userOptionsInlineKeyboard(user) {
 async function openTheDoor() {
 
     door_gpio.write(Gpio.VALUE.LOW);
-    await sleep(800);
+    await sleep(1000);
     door_gpio.write(Gpio.VALUE.HIGH);
 
 }
@@ -548,7 +586,9 @@ async function handleAudio(msg) {
 function getUserFromMsg(msg) {
 
     try {
+        console.log(`Searching for ${msg.chat.username}`);
         const index = db.getIndex("/known_users", msg.chat.username);
+        console.log(`Found: ${index}`);
         const user = db.getData(`/known_users[${index}]`);
         return user;
     } catch (error) {
