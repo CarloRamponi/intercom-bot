@@ -110,3 +110,5 @@ package-lock.json
 audio/not_at_home.ogg
 audio/call_me.ogg
 audio/leave_the_package_inside.ogg
+
+audio/custom/*
