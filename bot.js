@@ -227,6 +227,7 @@ bot.onText(/\/record/, async (msg) => {
             const filename = "/tmp/record.ogg";
             const duration = 8;
 
+            await audio.play("./audio/beep.ogg").catch(errorHandler);
             await audio.record(filename, duration).catch(errorHandler);
             
             audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
