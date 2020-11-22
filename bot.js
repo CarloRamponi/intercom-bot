@@ -468,7 +468,7 @@ bot.on('callback_query', async (query) => {
             if(!audio.busy) {
                 
                 audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
-                await audio.play(path,join(__dirname, `audio/custom/${filename}`)).catch(errorHandler);
+                await audio.play(path.join(__dirname, `audio/custom/${filename}`)).catch(errorHandler);
                 audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
     
                 bot.editMessageText(`Played. "${filename}"`, {
