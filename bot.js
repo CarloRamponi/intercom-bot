@@ -215,6 +215,45 @@ bot.onText(/\/test/, async (msg) => {
     }
 });
 
+bot.onText(/\/record/, async (msg) => {
+    if(isAdmin(msg)) {
+        
+        if(!audio.busy) {
+
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
+
+            const message = await bot.sendMessage(query.message.chat.id, "Recording audio...");
+            
+            const filename = "/tmp/record.ogg";
+            const duration = 8;
+
+            await audio.record(filename, duration).catch(errorHandler);
+            
+            audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
+
+            bot.deleteMessage(message.chat.id, message.message_id);
+            bot.sendAudio(query.message.chat.id, filename);
+
+        } else {
+            bot.sendMessage(query.message.chat.id, "Can't do that. Audio Controller is busy right now");
+        }
+
+    } else {
+        bot.sendMessage(msg.chat.id, "Unauthorized.");
+    }
+});
+
+/* Test command that replaces the intercom trigger until i figure out hoe to detect that */
+bot.onText(/\/test/, async (msg) => {
+    if(isAdmin(msg)) {
+
+        notifyBell();
+        
+    } else {
+        bot.sendMessage(msg.chat.id, "Unauthorized.");
+    }
+});
+
 bot.on('callback_query', async (query) => {
 
     let match;
@@ -352,10 +391,6 @@ bot.on('callback_query', async (query) => {
 
                 bot.deleteMessage(message.chat.id, message.message_id);
                 bot.sendAudio(query.message.chat.id, filename);
-
-                speaker_gpio.write(Gpio.VALUE.LOW);
-                await audio.play("./audio/beep.ogg").catch(errorHandler);
-                speaker_gpio.write(Gpio.VALUE.HIGH);
 
             } else {
                 bot.sendMessage(query.message.chat.id, "Can't do that. Audio Controller is busy right now");
@@ -561,7 +596,6 @@ async function handleAudio(msg) {
     
                 const responseFilePath = '/tmp/record.ogg';
                 const duration = 6;
-    
                 
                 await audio.record(responseFilePath, duration).catch(errorHandler);
     

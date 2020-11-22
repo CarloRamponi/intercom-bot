@@ -15,6 +15,7 @@ Telegram bot that manages a traditional, old school, intercom
   users - List bot users
   banned - List banned users
   open - Open the door
+  record - Record a short audio
   ```
 - Create a user named `intercombot`
   ```
@@ -82,6 +83,7 @@ Telegram bot that manages a traditional, old school, intercom
   - `call_me.ogg` this should say your telephone number
   - `leave_the_package_inside.ogg` this should instruct a delivery man to hide a package of yours, after that the door will open
 - Place some audio files you want to be able to play when someone rings the bell in the folder `audio/custom`, please be sure that filenames have *no spaces*.
+  Note that this callback will not record any response, in order to do that you'll have to send the /record command on completition.
 - Allow him to run the tee command as root without a password, run `visudo` and add this line at the end of that file, where N1, N2, ... are the gpio pin numbers that you will be using (the ones that are specified in `the secrets.json` file)
   ```
   intercombot ALL= NOPASSWD: /usr/bin/tee /sys/class/gpio/export, /usr/bin/tee /sys/class/gpio/gpioN1/value, /usr/bin/tee /sys/class/gpio/gpioN1/direction, /usr/bin/tee /sys/class/gpio/gpioN2/value, /usr/bin/tee /sys/class/gpio/gpioN2/direction, ...
