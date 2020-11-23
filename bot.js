@@ -39,28 +39,20 @@ bot.onText(/\/start/, (msg) => {
     } else {
         if(isAdmin(msg)) {
 
-            console.log("It is admin.");
             bot.sendMessage(msg.chat.id, "Hi Boss, how may I help you?");
+            console.log(`User @${msg.chat.username} is the Admin`);
 
         } else {
 
             const user = getUserFromMsg(msg);
-
-            console.log(`Not an admin, user: ${user}`);
-
+            
             if(user === null) {
 
-                console.log(`User was null, searching into banned users`);
-
-                try {
-
-                    db.getIndex(`/banned_users`, msg.chat.username);
+                if(isUserBanned(msg.chat.username)) {
                     bot.sendMessage(msg.chat.id, "Sorry, you have been banned.");
-
                     console.log(`User @${msg.chat.username} was banned`);
-
-                } catch(error) {
-
+                } else {
+                    
                     console.log(`User @${msg.chat.username} was NOT banned, sending welcome message`);
 
                     bot.sendMessage(msg.chat.id, "Hi " + msg.chat.first_name + " " + msg.chat.last_name + ",\nSince I don't know who you are, I will ask my boss what to do...\nI will let you know what he'll decide.");
@@ -86,7 +78,6 @@ bot.onText(/\/start/, (msg) => {
                         bot.sendMessage(id, `New User`);
                         sendUserSummary(id, user);
                     }
-
                 }
 
             } else {
@@ -621,13 +612,29 @@ async function handleAudio(msg) {
 function getUserFromMsg(msg) {
 
     try {
-        console.log(`Searching for ${msg.chat.username}`);
         const index = db.getIndex("/known_users", msg.chat.username);
-        console.log(`Found: ${index}`);
-        const user = db.getData(`/known_users[${index}]`);
-        return user;
+        if(index < 0) {
+            return null;
+        } else {
+            return db.getData(`/known_users[${index}]`);
+        }
     } catch (error) {
         return null;
+    }
+
+}
+
+function isUserBanned(username) {
+    
+    try {
+        const index = db.getIndex("/banned_users", username);
+        if(index < 0) {
+            return false;
+        } else {
+            return true;
+        }
+    } catch (error) {
+        return false;
     }
 
 }
