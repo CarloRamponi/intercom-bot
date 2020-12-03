@@ -112,3 +112,6 @@ audio/call_me.ogg
 audio/leave_the_package_inside.ogg
 
 audio/custom/*
+
+web/key.pem
+web/cert.pem

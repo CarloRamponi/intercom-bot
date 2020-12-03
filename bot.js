@@ -5,6 +5,7 @@ const Gpio = require("./gpio");
 const AudioController = require('./audio');
 const path = require('path');
 const fs = require('fs');
+const startWebServer = require('./web/server');
 
 const secrets = require('./secrets.json');
 const gpio = require('./gpio');
@@ -702,6 +703,21 @@ function sleep(ms) {
     return new Promise((resolve) => {
       setTimeout(resolve, ms);
     });
+}
+
+if(secrets.webserver) {
+
+    startWebServer(secrets.https_port, secrets.webtoken, (action) => {
+
+        bot.sendMessage(getAdminChatid(), `Webhook action *"${action}"* was just triggered`, { parse_mode: "Markdown" });
+
+        switch(action) {
+            case "open":
+                openTheDoor();
+                break;
+        }
+    });
+
 }
 
 notifyOnline();

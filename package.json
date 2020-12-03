@@ -18,6 +18,8 @@
   "homepage": "https://github.com/CarloRamponi/intercom-bot#readme",
   "dependencies": {
     "child_process": "^1.0.2",
+    "express": "^4.17.1",
+    "https": "^1.0.0",
     "node-json-db": "^1.1.0",
     "node-telegram-bot-api": "^0.50.0"
   }

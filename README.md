@@ -33,7 +33,10 @@ Telegram bot that manages a traditional, old school, intercom
     "admin" : "YOUR_TELEGRAM_USERNAME_HERE",
     "door_pin" : PIN_NUMBER_HERE,
     "bell_pin" : PIN_NUMBER_HERE,
-    "audio_pins": [PIN_NUMBER_HERE, PIN_NUMBER_HERE, ...]
+    "audio_pins": [PIN_NUMBER_HERE, PIN_NUMBER_HERE, ...],
+    "webserver": true,
+    "https_port": PORT,
+    "webtoken": SUPER_SECRET_TOKEN
   }
   ```
   Where:
@@ -42,6 +45,9 @@ Telegram bot that manages a traditional, old school, intercom
   - `door_pin` is the gpio pin number that will trigger the door opening
   - `bell_pin` is the gpio pin number that will detect when the intercom button is pressed
   - `audio_pins` are the gpio pin numbers that will trigger the relays that will connect the speaker and mic to the intercom
+  - `webserver` is true if you want to activate the https endpoint for external applications integration, if so you will have to follow the instructions at the end of this file in order to get it online
+  - `https_port` is the port that will be used by the https webserver, note that if you want to trigger the door opening from the internet, you will have to configure your router in order to open that door to the external world
+  - `webtoken` is a SUPER SECRET token that has to be sent to the https webserver in order to trigger the door opening. If this is kept very secret and https is used correctly there shouldn't be security issue, this is not the right way to authenticate a http endpoint though, but some external applications I was using wouldn't let me do anything else (IFTTT)
 - Run `npm install` in the project folder
 - Set up your device audio in a way that the default audio card is the one that you want the bot to use, in my case:
   - List the available devices:
@@ -114,6 +120,27 @@ Telegram bot that manages a traditional, old school, intercom
   systemctl start intercom-bot
   systemctl status intercom-bot
   ```
+
+## Optional: https endpoint for external applications intergration
+To do list:
+- Generate a self-signed certificate:
+  ```bash
+  openssl genrsa -out key.pem
+  openssl req -new -key key.pem -out csr.pem
+  openssl x509 -req -days 9999 -in csr.pem -signkey key.pem -out cert.pem
+  rm csr.pem
+  ```
+  This should leave you with two files, `cert.pem` (the certificate) and `key.pem` (the private key), put them in the `web/` directory
+- Set to true the option `webserver` in secrets.json and set the port and the token for the webserver.
+- Requests should be sent in this format:
+  - Method `POST`
+  - Content (json-formatted):
+    ```
+    {
+        "action": "open",
+        "token": "SUPER_SECRET_TOKEN"
+    }
+    ```
 
 ## Schematics
 
