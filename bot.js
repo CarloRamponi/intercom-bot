@@ -574,10 +574,10 @@ async function openTheDoor() {
     await sleep(300);
     door_gpio.write(Gpio.VALUE.HIGH);
 
-    await sleep(50);
+    await sleep(150);
 
     door_gpio.write(Gpio.VALUE.LOW);
-    await sleep(100);
+    await sleep(200);
     door_gpio.write(Gpio.VALUE.HIGH);
 
     await sleep(50);
