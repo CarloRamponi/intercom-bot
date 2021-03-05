@@ -547,7 +547,43 @@ function userOptionsInlineKeyboard(user) {
 async function openTheDoor() {
 
     door_gpio.write(Gpio.VALUE.LOW);
-    await sleep(1000);
+    await sleep(200);
+    door_gpio.write(Gpio.VALUE.HIGH);
+
+    await sleep(50);
+
+    door_gpio.write(Gpio.VALUE.LOW);
+    await sleep(100);
+    door_gpio.write(Gpio.VALUE.HIGH);
+
+    await sleep(50);
+
+    door_gpio.write(Gpio.VALUE.LOW);
+    await sleep(100);
+    door_gpio.write(Gpio.VALUE.HIGH);
+
+    await sleep(50);
+
+    door_gpio.write(Gpio.VALUE.LOW);
+    await sleep(200);
+    door_gpio.write(Gpio.VALUE.HIGH);
+
+    await sleep(50);
+
+    door_gpio.write(Gpio.VALUE.LOW);
+    await sleep(300);
+    door_gpio.write(Gpio.VALUE.HIGH);
+
+    await sleep(50);
+
+    door_gpio.write(Gpio.VALUE.LOW);
+    await sleep(100);
+    door_gpio.write(Gpio.VALUE.HIGH);
+
+    await sleep(50);
+
+    door_gpio.write(Gpio.VALUE.LOW);
+    await sleep(500);
     door_gpio.write(Gpio.VALUE.HIGH);
 
 }
