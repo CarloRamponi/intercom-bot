@@ -486,7 +486,7 @@ bot.on('callback_query', async (query) => {
   
   });
 
-function notifyBell() {
+async function notifyBell() {
 
     bot.sendMessage(getAdminChatid(), "🔔🔔🔔🔔🔔🔔🔔🔔🔔🔔", {
         parse_mode: "Markdown",
