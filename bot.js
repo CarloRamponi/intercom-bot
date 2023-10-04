@@ -514,7 +514,8 @@ async function notifyBell() {
     });
 
     if(isPartyEnabled()) {
-        await audio.play('./audio/beep.ogg').catch(errorHandler);
+        bot.sendMessage(getAdminChatid(), "Party mode enabled!, playing instructions and opening the door...");
+        // await audio.play('./audio/beep.ogg').catch(errorHandler);
         openTheDoor();
     }
 
