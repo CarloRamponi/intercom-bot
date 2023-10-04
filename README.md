@@ -5,7 +5,7 @@ Telegram bot that manages a traditional, old school, intercom
 - node
 - npm
 - mpv
-- vorbis-tools (ogg encoding)
+- lame (mp3 encoder)
 
 ## Configuration
 

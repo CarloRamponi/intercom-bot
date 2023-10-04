@@ -32,7 +32,7 @@ class AudioController {
                 reject("Audio Controller is busy");
             } else {
                 this.busy = true;
-                exec(`arecord -f cd -c 1 -d ${duration} -t raw | oggenc - -C 1 -r -o ${filename}`, (err, stdout, stderr) => {
+                exec(`arecord -f cd -c 1 -d ${duration} -t raw | lame -r -m m - ${filename}`, (err, stdout, stderr) => {
                     this.busy = false;
                     if(err) {
                         reject(stderr);

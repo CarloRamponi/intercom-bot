@@ -21,6 +21,6 @@
     "express": "^4.17.1",
     "https": "^1.0.0",
     "node-json-db": "^1.1.0",
-    "node-telegram-bot-api": "^0.50.0"
+    "node-telegram-bot-api": "^0.63.0"
   }
 }

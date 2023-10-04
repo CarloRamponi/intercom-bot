@@ -46,14 +46,14 @@ bot.onText(/\/start/, (msg) => {
         } else {
 
             const user = getUserFromMsg(msg);
-            
+
             if(user === null) {
 
                 if(isUserBanned(msg.chat.username)) {
                     bot.sendMessage(msg.chat.id, "Sorry, you have been banned.");
                     console.log(`User @${msg.chat.username} was banned`);
                 } else {
-                    
+
                     console.log(`User @${msg.chat.username} was NOT banned, sending welcome message`);
 
                     bot.sendMessage(msg.chat.id, "Hi " + msg.chat.first_name + " " + msg.chat.last_name + ",\nSince I don't know who you are, I will ask my boss what to do...\nI will let you know what he'll decide.");
@@ -209,19 +209,19 @@ bot.onText(/\/test/, async (msg) => {
 
 bot.onText(/\/record/, async (msg) => {
     if(isAdmin(msg)) {
-        
+
         if(!audio.busy) {
 
             audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
 
             const message = await bot.sendMessage(msg.chat.id, "Recording audio...");
-            
-            const filename = "/tmp/record.ogg";
+
+            const filename = "/tmp/record.mp3";
             const duration = 8;
 
             await audio.play("./audio/beep.ogg").catch(errorHandler);
             await audio.record(filename, duration).catch(errorHandler);
-            
+
             audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
             bot.deleteMessage(message.chat.id, message.message_id);
@@ -374,12 +374,12 @@ bot.on('callback_query', async (query) => {
                 });
 
                 const message = await bot.sendMessage(query.message.chat.id, "Recording response...");
-                
-                const filename = "/tmp/record.ogg";
+
+                const filename = "/tmp/record.mp3";
                 const duration = 6;
 
                 await audio.record(filename, duration).catch(errorHandler);
-                
+
                 audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
                 bot.deleteMessage(message.chat.id, message.message_id);
@@ -390,7 +390,7 @@ bot.on('callback_query', async (query) => {
             }
 
         }
-  
+
     }
 
     match = query.data.match(/\/call_me/);
@@ -617,22 +617,22 @@ async function handleAudio(msg) {
                 audio_gpios.forEach((pin) => pin.write(gpio.VALUE.LOW));
                 await audio.play(fileName).catch(errorHandler);
                 await audio.play('./audio/beep.ogg').catch(errorHandler);
-    
+
                 bot.editMessageText('Recording response...', {
                     chat_id: message.chat.id,
                     message_id: message.message_id
                 });
-    
-                const responseFilePath = '/tmp/record.ogg';
+
+                const responseFilePath = '/tmp/record.mp3';
                 const duration = 6;
-                
+
                 await audio.record(responseFilePath, duration).catch(errorHandler);
-    
+
                 bot.deleteMessage(message.chat.id, message.message_id);
                 bot.sendAudio(msg.chat.id, responseFilePath);
-    
+
                 await audio.play('./audio/beep.ogg').catch(errorHandler);
-                
+
                 audio_gpios.forEach((pin) => pin.write(gpio.VALUE.HIGH));
 
             } else {
