@@ -16,6 +16,7 @@ Telegram bot that manages a traditional, old school, intercom
   banned - List banned users
   open - Open the door
   record - Record a short audio
+  party - Enable/Disable party mode
   ```
 - Create a user named `intercombot`
   ```

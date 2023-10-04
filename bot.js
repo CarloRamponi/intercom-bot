@@ -514,6 +514,7 @@ function notifyBell() {
     });
 
     if(isPartyEnabled()) {
+        await audio.play('./audio/beep.ogg').catch(errorHandler);
         openTheDoor();
     }
 
