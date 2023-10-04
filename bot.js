@@ -142,6 +142,14 @@ bot.on('voice', (msg) => {
     handleAudio(msg);
 });
 
+bot.onText(/\/party/, (msg) => {
+    if(isAdmin(msg)) {
+        const party = isPartyEnabled();
+        setParty(!party);
+        bot.sendMessage(msg.chat.id, `Party mode ${!party ? "enabled" : "disabled"}`);
+    }
+});
+
 bot.onText(/\/banned/, (msg) => {
     if(isAdmin(msg)) {
 
@@ -505,6 +513,10 @@ function notifyBell() {
         }
     });
 
+    if(isPartyEnabled()) {
+        openTheDoor();
+    }
+
 }
 
 function errorHandler(error) {
@@ -726,6 +738,21 @@ function isAdmin(msg) {
         return true;
     }
     return false;
+}
+
+function isPartyEnabled() {
+
+    try {
+        const party = db.getData("/party/enabled");
+        return party;
+    } catch (error) {
+        return false;
+    }
+
+}
+
+function setParty(enabled) {
+    db.push("/party/enabled", enabled);
 }
 
 function notifyOnline() {
